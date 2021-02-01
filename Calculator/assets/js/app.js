@@ -1,41 +1,3 @@
-const input = document.querySelector("#userInput");
-const answer = document.querySelector("#answer");
-
-
-
-document.querySelector("#clear").addEventListener("click", function(){
-    input.value = "";
-    answer.value = "";
-});
-
-document.querySelector("#backspace").addEventListener("click", function(){
-    input.value = input.value.substring(0, input.value.length - 1).trim();
-});
-
-document.querySelector("#evaluate").addEventListener("click", function() {
-    answer.value = postfixEval(infixToPostfix(input.value.toString().replaceAll("^", "**"))).toString();
-})
-
-const numbersBtn = document.querySelectorAll(".expression");
-numbersBtn.forEach( button => 
-    button.addEventListener("click", function(){
-        addtoexpression(button);
-        
-    })
-);
-
-const operatorBtn = document.querySelectorAll(".operator");
-operatorBtn.forEach( button => 
-    button.addEventListener("click", function(){
-        addoperatortoexpression(button);
-    })
-);
-
-document.querySelector("#squareroot").addEventListener("click", function() {
-    answer.value = Math.sqrt(Number(input.value)).toFixed(3);
-})
-
-
 function addtoexpression(button) {
     input.value += button.textContent;
 }
@@ -44,16 +6,31 @@ function addoperatortoexpression(button) {
     input.value = input.value + " " + button.textContent + " ";
 }
 
+function precedence(a, b) {
+    let pr = "/*";
+    if (a == b) {
+        return true;
+    }else if ((a + b).includes("+-")) {
+        return true;
+    } else if ((a + b).includes("*/")) {
+        return true;
+    } else if (pr.includes(a)) {
+        return true;
+    } return false;
+}
+
 function infixToPostfix(infixExpr) {
-    let infix = infixExpr.split(" ").map(ex => ex.trim());
+    let infix = infixExpr.split(" ");
     op_stack = [];
     postfix = [];
 
     for (i of infix) {
-        if ("+-**/^".indexOf(i) == -1) {
+        if (i.match(/[0-9a-zA-Z]+$/)) {
             postfix.push(i);
         } else if (op_stack.length == 0) {
-            op_stack.push(i);
+            op_stack.push(i); 
+        } else if (i == "^") {
+            op_stack.push("**");
         } else {
             while (op_stack.length > 0 && precedence(op_stack[op_stack.length - 1], i)) {
                 postfix.push(op_stack.pop());
@@ -62,19 +39,10 @@ function infixToPostfix(infixExpr) {
     } while (op_stack.length > 0) {
         postfix.push(op_stack.pop());
     }
-    return postfix.join(" ");
+    let res = postfix.join(" ");
+    console.log(res);  
+    return postfix;
 
-}
-
-function precedence(a, b) {
-    let pr = "/**";
-    if ((a + b).includes("+-")) {
-        return true;
-    } else if ((a + b).includes("**/")) {
-        return true;
-    } else if (pr.includes(a)) {
-        return true;
-    } return false;
 }
 
 function add(x, y) {
@@ -100,13 +68,10 @@ function divide(x, y) {
     } return x / y;
 }
 
-function postfixEval(expression) {
-    expression = expression.trim();
-    let postfix = expression.split(" ");
+function postfixEval(postfix) {
     let operand = [];
-    let operator = "-+**/"
     for (ex of postfix) {
-        if (operator.indexOf(ex) != -1) {
+        if (!ex.match(/^[0-9a-zA-Z]+$/)) {
             let y = operand.pop();
             let x = operand.pop();
             let temp;
@@ -127,10 +92,50 @@ function postfixEval(expression) {
                     temp = divide(Number(x), Number(y));
                     break;
                 default:
+                    temp = " ";
+                    break;
             }
             operand.push(temp.toString());
         } else {
             operand.push(ex)
         }
-    } return operand.pop();
+    } 
+    let res = operand[0];
+    console.log(operand);
+    return res;
 }
+
+
+const input = document.querySelector("#userInput");
+const answer = document.querySelector("#answer");
+
+document.querySelector("#clear").addEventListener("click", function(){
+    input.value = "";
+    answer.value = "";
+});
+
+document.querySelector("#backspace").addEventListener("click", function(){
+    input.value = input.value.substring(0, input.value.length - 1).trim();
+});
+
+document.querySelector("#evaluate").addEventListener("click", function() {
+    answer.value = postfixEval(infixToPostfix(input.value.toString().replaceAll("^", "**"))).toString();
+});
+
+const numbersBtn = document.querySelectorAll(".expression");
+numbersBtn.forEach( button => 
+    button.addEventListener("click", function(){
+        addtoexpression(button);  
+    })
+);
+
+const operatorBtn = document.querySelectorAll(".operator");
+operatorBtn.forEach( button => 
+    button.addEventListener("click", function(){
+        addoperatortoexpression(button);
+    })
+);
+
+document.querySelector("#squareroot").addEventListener("click", function() {
+    answer.value = Math.sqrt(Number(input.value)).toFixed(3);
+});
